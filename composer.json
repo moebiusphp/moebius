@@ -2,7 +2,7 @@
     "name": "moebius/fiber",
     "description": "Turbo-charge your existing code base with coroutines based on pure PHP 8.1 fibers",
     "type": "library",
-    "license": "MIT",
+    "license": "GPLv2",
     "autoload": {
         "psr-4": {
             "Moebius\\": "src/"
