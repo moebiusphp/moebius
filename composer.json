@@ -1,6 +1,6 @@
 {
-    "name": "moebius/fiber",
-    "description": "Turbo-charge your existing code base with coroutines based on pure PHP 8.1 fibers",
+    "name": "moebius/moebius",
+    "description": "Turbo-charge your existing codebase with coroutines based on pure PHP 8.1 fibers",
     "type": "library",
     "license": "GPLv2",
     "autoload": {
