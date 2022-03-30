@@ -1,6 +1,48 @@
 Moebius
 =======
 
+![Möbuus Loop](docs/wikipedia-mobius-strip.png)
+
+*Moebius Band: A loop with only one surface*
+
+If you like this, experiment!
+-----------------------------
+
+This library may be very useful as it stands, but it is quite early in
+it's development.
+
+### First priority
+
+The low-level API must be finalized, so we need to discover any
+logical holes in the design. It needs to be tested inside an existing
+project such as in a WordPress website or a Laravel application.
+
+Testing asynchronous IO is not important; that will work as long as
+we are able to switch between coroutines in various settings.
+
+
+### Try making existing libraries Moebius-able
+
+If you have an HTTP client which could become async friendly, please
+test it.
+
+To begin with, you can simply modify any blocking PHP calls in your
+code with a loop that calls `\Moebius::yield()` while polling for data.
+
+Soon I will publish functions for waiting on asynchronous IO. If you
+are reading data, you'll be able to call `\Moebius::readable($stream)`.
+If you are going to write data, you can call `\Moebius::writable($stream)`.
+
+
+### Tell me!
+
+It would be very inspiring if this library actually helps you achieve
+something: improved performance, lowered hosting costs, cleaner code....
+
+
+What is this?
+-------------
+
 Completely transparent coroutines thanks to PHP 8.1 Fibers. No complex
 nested callbacks or promise trees. Just plain old-school PHP code running
 asynchronously, like in GoLang.
