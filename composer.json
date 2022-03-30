@@ -1,0 +1,23 @@
+{
+    "name": "moebius/fiber",
+    "description": "Turbo-charge your existing code base with coroutines based on pure PHP 8.1 fibers",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Moebius\\": "src/"
+        },
+        "classmap": ["Moebius.php"],
+        "files": ["functions.php"]
+    },
+    "authors": [
+        {
+            "name": "Frode Børli",
+            "email": "frode@ennerd.com"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {
+        "php": ">=8.1"
+    }
+}
