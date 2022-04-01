@@ -226,7 +226,7 @@ class Promise {
     /**
      * Resolve the promise with a value
      */
-    public function resolve(mixed $result): void {
+    public function resolve(mixed $result=null): void {
         if ($this->fromThenable) {
             throw new PromiseException("Promise was cast from Thenable and can't be externally resolved");
         }
@@ -248,7 +248,7 @@ class Promise {
     /**
      * Reject the promise with a reason
      */
-    public function reject(mixed $reason): void {
+    public function reject(mixed $reason=null): void {
         if ($this->fromThenable) {
             throw new PromiseException("Promise was cast from Thenable and can't be externally rejected");
         }

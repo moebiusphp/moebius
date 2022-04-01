@@ -48,8 +48,8 @@ function defer(callable $func): void {
  * Pause for a number of seconds - same as the built-in `sleep()`
  * function.
  */
-function sleep(float $seconds): int {
-    return M::sleep($seconds);
+function sleep(float $seconds): void {
+    M::sleep($seconds);
 }
 
 /**

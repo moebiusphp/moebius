@@ -19,5 +19,8 @@
     "minimum-stability": "stable",
     "require": {
         "php": ">=8.1"
+    },
+    "require-dev": {
+        "charm/testing": "^0.0"
     }
 }

@@ -25,7 +25,8 @@ class Coroutine {
 
     public static function create(callable $coroutine, mixed ...$args): Promise {
         $c = new self($coroutine, ...$args);
-        Moebius::defer($c->run(...));
+        $c->run();
+//        Moebius::defer($c->run(...));
         return $c->promise;
     }
 
@@ -99,7 +100,6 @@ class Coroutine {
         if (Fiber::getCurrent() && self::getCurrent()) {
             throw new \Exception("Can't run coroutine from within another coroutine");
         }
-
         if ($this->fiber->isTerminated()) {
             throw new CoroutineException("Coroutine has terminated");
         }
@@ -108,9 +108,8 @@ class Coroutine {
 
         self::$deadline = $startTime + self::$maxTime;
 
-        //register_tick_function(self::check(...));
-
         $this->startContext();
+
         try {
             if ($this->fiber->isSuspended()) {
                 $this->lastResult = $this->fiber->resume($this->lastResult);
@@ -120,12 +119,11 @@ class Coroutine {
                 throw new CoroutineException("Coroutine is in an unexpected state");
             }
         } catch (\Throwable $e) {
+            $this->logException($e);
             // @TODO Could be useful to see these exceptions in a PSR logger
             $this->exception = $e;
             $this->promise->reject($e);
         }
-
-        //unregister_tick_function(self::check(...));
 
         switch ($this->promise->status()) {
             case Promise::FULFILLED:
@@ -133,7 +131,7 @@ class Coroutine {
                 return true;
             case Promise::REJECTED:
                 unset(self::$fibers[$this->fiber]);
-                return false;
+                return true;
         }
         if ($this->fiber->isTerminated()) {
             unset(self::$fibers[$this->fiber]); // helps garbage collection a little
@@ -164,6 +162,10 @@ class Coroutine {
         // TODO
     }
 
+    protected function logException(\Throwable $e): void {
+        Moebius::logException($e);
+    }
+
     /**
      * Allow us to get the current Coroutine based on the current
      * Fiber.
@@ -184,7 +186,6 @@ class Coroutine {
         }
         self::$fibers = new WeakMap();
         self::$bootstrapped = true;
-        FileStreamWrapper::register();
     }
 
 

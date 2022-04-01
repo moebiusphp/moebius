@@ -31,7 +31,7 @@ class FileStreamWrapper {
     }
 
     private static function log(string $message): void {
-//        fwrite(STDERR, "FSWrapper: ".trim($message)."\n");
+        // fwrite(STDERR, "FSWrapper: ".trim($message)."\n");
     }
 
     private static function wrap(callable $callback, mixed ...$args): mixed {
@@ -174,6 +174,7 @@ class FileStreamWrapper {
 
     public function stream_read($length): string|false {
         self::log(__FUNCTION__."(".implode(" ", func_get_args()).")");
+        Moebius::readable($this->fileHandle);
         return self::wrap(fread(...), $this->fileHandle, $length);
     }
 
@@ -204,6 +205,7 @@ class FileStreamWrapper {
 
     public function stream_write($data): int {
         self::log(__FUNCTION__."(".implode(" ", func_get_args()).")");
+        Moebius::writable($this->fileHandle);
         return self::wrap(fwrite(...), $this->fileHandle, $data);
     }
 

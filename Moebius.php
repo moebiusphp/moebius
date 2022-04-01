@@ -7,6 +7,7 @@ use Moebius\PromiseRejectedError;
 use Moebius\ThenableExpectedError;
 use Moebius\Coroutine;
 use Moebius\FiberTask;
+use Moebius\FileStreamWrapper;
 
 final class Moebius {
 
@@ -35,9 +36,31 @@ final class Moebius {
                 // Yield some time to the operating system, don't want to busy-wait
                 usleep(10);
             }
+        } elseif (Coroutine::getCurrent()) {
+            Coroutine::suspend();
         } else {
             self::$loop->drain(function() { return true; });
         }
+    }
+
+    /**
+     * Yield until the given resource is readable
+     */
+    public static function readable($stream): void {
+        $p = new Promise();
+        self::$loop->addReadStream($stream, $p->resolve(...));
+        self::await($p);
+        self::$loop->removeReadStream($stream, $p->resolve(...));
+    }
+
+    /**
+     * Yield until the given resource is writable
+     */
+    public static function writable($stream): void {
+        $p = new Promise();
+        self::$loop->addWriteStream($stream, $p->resolve(...));
+        self::await($p);
+        self::$loop->removeWriteStream($stream, $p->resolve(...));
     }
 
     /**
@@ -65,6 +88,10 @@ final class Moebius {
         $promise = Promise::all($thenable);
 //        $promise = Promise::cast($thenable);
 
+        do {
+            self::yield();
+        } while ($promise->status() === Promise::PENDING);
+/*
         if (!self::$loop->isDraining()) {
             self::$loop->drain(function() use ($promise) {
                 return $promise->status() !== Promise::PENDING;
@@ -74,7 +101,7 @@ final class Moebius {
                 self::yield();
             } while ($promise->status() === Promise::PENDING);
         }
-
+*/
         switch ($promise->status()) {
             case Promise::REJECTED:
                 if ($promise->reason() instanceof \Throwable) {
@@ -111,6 +138,11 @@ final class Moebius {
         }
     }
 
+    public static function logException(\Throwable $e) {
+        fwrite(STDERR, gmdate('Y-m-d H:i:s')." ".$e->getMessage()." in ".$e->getFile().":".$e->getLine()."\n".$e->getTraceAsString()."\n");
+    }
+
+
     /**
      * Moebius can't be constructed. Use the static methods.
      */
@@ -126,9 +158,11 @@ final class Moebius {
         self::$bootstrapped = true;
         self::$loop = new NativeEventLoop();
         Coroutine::bootstrap();
+        class_exists(Promise::class); // ensure Promise is loaded before FileStreamWrapper starts
+        FileStreamWrapper::register();
     }
     private static bool $bootstrapped = false;
-    private static ?LoopInterface $loop = null;
+    public static ?LoopInterface $loop = null;
     private static ?string $globalsTemplate = null;
 }
 

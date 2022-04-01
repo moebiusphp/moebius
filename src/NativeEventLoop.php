@@ -1,8 +1,9 @@
 <?php
 namespace Moebius;
 
+use Moebius;
+use Countable;
 use Fiber;
-use SplObjectStorage as Map;
 use const SIG_DFL, SIGTERM, SIGINT;
 use function pcntl_signal, pcntl_async_signals, array_filter, count, stream_select;
 use function register_shutdown_function;
@@ -12,21 +13,18 @@ use function register_shutdown_function;
  * for a simple event loop, used when there are no other
  * event loop implementation available.
  */
-class NativeEventLoop implements LoopInterface {
+class NativeEventLoop implements LoopInterface, Countable {
 
     public function __construct() {
-        register_shutdown_function($this->onShutdown(...));
-        $this->addSignal(SIGTERM, function() {
-            $this->terminate();
-        });
-        $this->addSignal(SIGINT, function() {
-            $this->terminate();
-        });
-        $this->addSignal(SIGQUIT, function() {
-            $this->terminate();
-        });
+        $this->readableStreamListeners = [];
+        $this->writableStreamListeners = [];
         $this->lastSleepTime = microtime(true);
         pcntl_async_signals(true);
+        register_shutdown_function($this->onShutdown(...));
+    }
+
+    public function count(): int {
+        return $this->queueHead - $this->queueTail;
     }
 
     /**
@@ -111,7 +109,7 @@ class NativeEventLoop implements LoopInterface {
             try {
                 $callback();
             } catch (\Throwable $e) {
-                $this->handleException($e);
+                $this->logException($e);
             }
         }
         $tickTime = (1000000 * (microtime(true) - $startTime)) | 0;
@@ -137,7 +135,7 @@ class NativeEventLoop implements LoopInterface {
         try {
             $callback();
         } catch (\Throwable $e) {
-            $this->handleException($e);
+            $this->logException($e);
         }
         return 1;
     }
@@ -151,8 +149,8 @@ class NativeEventLoop implements LoopInterface {
             pcntl_signal($signo, SIG_DFL);
         }
         $this->signalHandlers = [];
-        $this->readableStreamListeners = new Map();
-        $this->writableStreamListeners = new Map();
+        $this->readableStreamListeners = [];
+        $this->writableStreamListeners = [];
         $this->queue = [];
         $this->queueTail = 0;
         $this->queueHead = 0;
@@ -185,7 +183,7 @@ class NativeEventLoop implements LoopInterface {
             try {
                 $handler($signo, $siginfo);
             } catch (\Throwable $error) {
-                $this->handleException($error);
+                $this->logException($error);
             }
         }
     }
@@ -198,15 +196,26 @@ class NativeEventLoop implements LoopInterface {
      * @param callable $callback        The callback to invoke
      */
     public function addReadStream($stream, callable $callback): void {
-        if ($this->writableStreamListeners === null) {
-            $this->writableStreamListeners = new Map();
+        $streamId = (int) $stream;
+        if (isset($this->readableStreamListeners[$streamId])) {
+            $this->readableStreamListeners[$streamId][1][] = $callback;
+        } else {
+            $this->readableStreamListeners[$streamId] = [ $stream, [ $callback ] ];
         }
-        self::addStreamCallback($this->readableStreamListeners, $stream, $callback);
         $this->enableStreamSelect();
     }
 
     public function removeReadStream($stream, callable $callback): void {
-        self::removeStreamCallback($this->readableStreamListeners, $stream, $callback);
+        $streamId = (int) $stream;
+        if (!isset($this->readableStreamListeners[$streamId])) {
+            return;
+        }
+        $this->readableStreamListeners[$streamId][1] = array_filter($this->readableStreamListeners[$streamId][1], function($existing) use ($callback) {
+            return $callback !== $existing;
+        });
+        if (count($this->readableStreamListeners[$streamId][1]) === 0) {
+            unset($this->readableStreamListeners[$streamId]);
+        }
     }
 
     /**
@@ -217,19 +226,26 @@ class NativeEventLoop implements LoopInterface {
      * @param callable $callback        The callback to invoke
      */
     public function addWriteStream($stream, callable $callback): void {
-        if ($this->writableStreamListeners === null) {
-            $this->writableStreamListeners = new Map();
+        $streamId = (int) $stream;
+        if (isset($this->writableStreamListeners[$streamId])) {
+            $this->writableStreamListeners[$streamId][1][] = $callback;
+        } else {
+            $this->writableStreamListeners[$streamId] = [ $stream, [ $callback ] ];
         }
-        self::addStreamCallback($this->writableStreamListeners, $stream, $callback);
         $this->enableStreamSelect();
-        if (!$this->isStreamSelectScheduled) {
-            $this->isStreamSelectScheduled = true;
-            $this->defer($this->doStreamSelect(...));
-        }
     }
 
     public function removeWriteStream($stream, callable $callback): void {
-        self::removeStreamCallback($this->writableStreamListeners, $stream, $callback);
+        $streamId = (int) $stream;
+        if (!isset($this->writableStreamListeners[$streamId])) {
+            return;
+        }
+        $this->writableStreamListeners[$streamId][1] = array_filter($this->writableStreamListeners[$streamId][1], function($existing) use ($callback) {
+            return $callback !== $existing;
+        });
+        if (count($this->writableStreamListeners[$streamId][1]) === 0) {
+            unset($this->writableStreamListeners[$streamId]);
+        }
     }
 
     /**
@@ -285,13 +301,21 @@ class NativeEventLoop implements LoopInterface {
         $this->isStreamSelectScheduled = false;
 
         $readStreams = [];
-        foreach ($this->readableStreamListeners as $stream => $callbacks) {
-            $readStreams[] = $stream;
+        foreach ($this->readableStreamListeners as $stream => $info) {
+            if (!is_resource($info[0])) {
+                unset($this->readableStreamListeners[$stream]);
+                continue;
+            }
+            $readStreams[] = $info[0];
         }
 
         $writeStreams = [];
-        foreach ($this->writableStreamListeners as $stream => $callbacks) {
-            $writeStreams[] = $stream;
+        foreach ($this->writableStreamListeners as $stream => $info) {
+            if (!is_resource($info[0])) {
+                unset($this->writableStreamListeners[$stream]);
+                continue;
+            }
+            $writeStreams[] = $info[0];
         }
 
         $exceptStreams = [];
@@ -300,16 +324,19 @@ class NativeEventLoop implements LoopInterface {
         }
 
         $matches = stream_select($readStreams, $writeStreams, $exceptStreams, 0, 50000);
+
         $this->lastSleepTime = microtime(true);
 
         foreach ($readStreams as $stream) {
-            foreach ($this->readableStreamListeners[$stream] as $callback) {
+            $streamId = (int) $stream;
+            foreach ($this->readableStreamListeners[$streamId][1] as $callback) {
                 $this->defer($callback);
             }
         }
 
         foreach ($writeStreams as $stream) {
-            foreach ($this->writableStreamListeners[$stream] as $callback) {
+            $streamId = (int) $stream;
+            foreach ($this->writableStreamListeners[$streamId][1] as $callback) {
                 $this->defer($callback);
             }
         }
@@ -329,7 +356,7 @@ class NativeEventLoop implements LoopInterface {
      *
      * @type SplObjectStorage<resource, array<callable>>
      */
-    private ?Map $readableStreamListeners = null;
+    private array $readableStreamListeners;
 
     /**
      * Map of streams to callbacks that needs notification when the stream
@@ -337,7 +364,7 @@ class NativeEventLoop implements LoopInterface {
      *
      * @type SplObjectStorage<resource, array<callable>>
      */
-    private ?Map $writableStreamListeners = null;
+    private array $writableStreamListeners;
 
     /**
      * Map of signals number to arrays of callbacks which will be invoked when
@@ -346,34 +373,38 @@ class NativeEventLoop implements LoopInterface {
     private array $signalHandlers = [];
 
     /**
-     * Invoked to handle exceptions thrown in user provided callbacks
+     * Invoked to log or notify about exceptions thrown in user provided callbacks
      */
-    private function handleException(\Throwable $e): void {
-        // @TODO Should accept a PSR logger
-        fwrite(STDERR, "Exception ".$e::class." code ".$e->getCode()." thrown in ".$e->getFile().":".$e->getLine()."\n".$e->getMessage()."\n\n".$e->getTraceAsString()."\n");
+    private function logException(\Throwable $e): void {
+        Moebius::logException($e);
     }
 
-    private static function addStreamCallback(Map $map, $stream, callable $callback): void {
-        if (!isset($map[$stream])) {
-            $current = [];
+    private static function addStreamCallback(array &$map, $stream, callable $callback): void {
+        $streamId = (int) $stream;
+echo "STREAM ID: $streamId ADDED\n";
+        if (!isset($map[$streamId])) {
+            $current = [$stream];
         } else {
-            $current = $map[$stream];
+            $current = $map[$streamId];
         }
         $current[] = $callback;
-        $map[$stream] = $current;
+        $map[$streamId] = $current;
+var_dump($map);
     }
 
-    private static function removeStreamCallback(Map $map, $stream, callable $callback): void {
-        if (!isset($map[$stream])) {
+    private static function removeStreamCallback(array &$map, $stream, callable $callback): void {
+        $streamId = (int) $stream;
+echo "STREAM ID: $streamId REMOVED\n";
+        if (!isset($map[$streamId])) {
             return;
         }
-        $current = array_filter($map[$stream], function($existing) use ($callback) {
+        $current = array_filter($map[$streamId], function($existing) use ($callback) {
             return $existing !== $callback;
         });
         if (count($current) === 0) {
             unset($map[$stream]);
         } else {
-            $map[$stream] = $current;
+            $map[$streamId] = $current;
         }
     }
 
