@@ -46,6 +46,7 @@ class Coroutine {
 
     /**
      * Call this function in busy loops to automatically suspend once the runtime has expired.
+     * Has no effect outside of coroutines.
      */
     public static function check(): void {
         if (

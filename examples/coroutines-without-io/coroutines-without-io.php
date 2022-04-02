@@ -1,7 +1,7 @@
 <?php
 namespace Funny;
 
-require("vendor/autoload.php");
+require(__DIR__."/../../vendor/autoload.php");
 
 use function M\{
     await,          // await one or more coroutines (or Promise instances)

@@ -1,6 +1,41 @@
 Moebius
 =======
 
+Real coroutines in PHP, no external dependencies. No generator
+hackery and `yield` instructions. No event-loop you need to think
+about.
+
+Example using a fifo file (which are notorius for blocking your code):
+
+```
+<?php
+    require('vendor/autoload.php');
+
+    posix_mkfifo('example.fifo-file', 0600);
+
+    $coroutine1 = go(function() {
+
+        // fifo files are normally blocking
+
+        $fp = fopen('example.fifo-file', 'r');
+        while (!feof($fp)) {
+            echo "Reading from fifo file: ".fgets($fp);
+        }
+    });
+    $coroutine2 ) go(function() {
+        $fp = fopen('example.fifo-file', 'w');
+        $timeLimit = microtime(true) + 2;
+        while (microtime(true) < $limeLimit) {
+            fwrite($fp, gmdate('Y-m-d H:i:s'));
+        }
+    });
+            
+?>
+```
+    
+
+
+
 Real coroutines for PHP. No more Promise or callback hell.
 
     // open files in parallel

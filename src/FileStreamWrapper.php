@@ -12,6 +12,13 @@ class FileStreamWrapper {
 
     private static bool $registered = false;
 
+    /**
+     * Function to assist with development early stage
+     */
+    private static function log(string $message): void {
+        //fwrite(STDERR, "FSWrapper: ".trim($message)."\n");
+    }
+
     public static function register(): void {
         if (self::$registered) {
             throw new \Exception("Already registered");
@@ -28,10 +35,6 @@ class FileStreamWrapper {
         stream_wrapper_unregister('file');
         stream_wrapper_restore('file');
         self::log("unregistered");
-    }
-
-    private static function log(string $message): void {
-        // fwrite(STDERR, "FSWrapper: ".trim($message)."\n");
     }
 
     private static function wrap(callable $callback, mixed ...$args): mixed {
@@ -169,7 +172,29 @@ class FileStreamWrapper {
 
     public function stream_open(string $path, $mode, int $options, &$opened_path): bool {
         self::log(__FUNCTION__."(".implode(" ", func_get_args()).")");
-        return !!($this->fileHandle = self::wrap(fopen(...), $path, $mode, (bool) ($options & STREAM_USE_PATH)));
+        return self::wrap(function() use ($path, $mode, $options, &$opened_path) {
+            /**
+             * If the calling PHP code opened this file in blocking mode,
+             * or if it is not being called from inside a coroutine we 
+             * should ensure that the coroutine will block, even if we
+             * manipulate the fopen()
+             */
+            $isNonBlocking = strpos($mode, 'n') !== false;
+            $isCoroutine = !!Coroutine::getCurrent();
+
+            if ($isNonBlocking || !$isCoroutine) {
+                return $this->fileHandle = fopen($path, $mode, (bool) ($options & STREAM_USE_PATH));
+            }
+
+            /**
+             * Simulating a blocking fopen call
+             */
+            $this->fileHandle = fopen($path, $mode.'n', (bool) ($options & STREAM_USE_PATH));
+            $metadata = stream_get_meta_data($this->fileHandle);
+            echo json_encode($metadata, JSON_PRETTY_PRINT);
+
+            return !!$this->fileHandle;
+        });
     }
 
     public function stream_read($length): string|false {
