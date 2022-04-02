@@ -1,6 +1,8 @@
 Moebius
 =======
 
+Real coroutines for PHP. No more Promise or callback hell.
+
     // open files in parallel
     await(
       go(file_get_contents(...), "fifofile"),
