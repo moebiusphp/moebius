@@ -1,13 +1,11 @@
 Moebius
 =======
 
-'''
-// open files in parallel
-await(
-  go(file_get_contents(...), "fifofile"),
-  go(file_put_contents(...), "fifofile", "hello")
-);
-'''
+    // open files in parallel
+    await(
+      go(file_get_contents(...), "fifofile"),
+      go(file_put_contents(...), "fifofile", "hello")
+    );
 
 ![Möbuus Loop](docs/wikipedia-mobius-strip.png)
 
