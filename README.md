@@ -1,6 +1,39 @@
 Moebius
 =======
 
+Coroutines for PHP 8.1.
+
+*Moebius Band: A loop with only one surface*
+
+![Möbuus Loop](docs/wikipedia-mobius-strip.png)
+
+---
+
+UPDATE!
+
+If you want to try using moebius in your existing asynchronous application,
+based on React or Amp - you might have some success with 
+`composer require moebius/coroutine`. 
+
+This library is in the process of being restructured into separate components:
+
+ * `moebius/coroutine` is a complete coroutine runner with a set of functions
+   designed to make it easier to develop asynchronous applications.
+   
+ * `moebius/promise` is a nice promise implementation that follows the Promise/A+
+   specification from JavaScript. In enables compatability with other Promise 
+   implementations.
+   
+ * `moebius/loop` is an event loop compatability layer. It enables working with
+   react/event-loop, amphp/amp and in the future also other event loop 
+   implementations with a single API.
+   
+ * `moebius/loop-reactbridge` provides most of the `react/event-loop` API via
+   the `moebius/loop`API - which means you can use ReactPHP components with 
+   moebius or amp.
+ 
+---
+
 Real coroutines in PHP, no external dependencies. No generator
 hackery and `yield` instructions. No event-loop you need to think
 about.
@@ -43,10 +76,6 @@ Real coroutines for PHP. No more Promise or callback hell.
       go(file_get_contents(...), "fifofile"),
       go(file_put_contents(...), "fifofile", "hello")
     );
-
-![Möbuus Loop](docs/wikipedia-mobius-strip.png)
-
-*Moebius Band: A loop with only one surface*
 
 If you like this, experiment!
 -----------------------------
