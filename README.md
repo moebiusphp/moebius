@@ -5,7 +5,7 @@ Coroutines for PHP 8.1.
 
 Run `composer require moebius/coroutine`, then start using coroutines:
 
-```
+```php
 use function M\{go, await, sleep, unblock};
 
 $futureResult = go(function() {
@@ -60,7 +60,7 @@ about.
 
 Example using a fifo file (which are notorius for blocking your code):
 
-```
+```php
 <?php
     require('vendor/autoload.php');
 
