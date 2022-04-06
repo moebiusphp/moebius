@@ -3,6 +3,26 @@ Moebius
 
 Coroutines for PHP 8.1.
 
+Run `composer require moebius/coroutine`, then start using coroutines:
+
+```
+use function M\{go, await, sleep, unblock};
+
+$futureResult = go(function() {
+    sleep(0.5);                                    // sleep() is non-blocking
+    return [1, 2, 3];
+});
+
+$readSomeFile = go(function() {
+    $fp = unblock(fopen('some_file.txt', 'r'));    // unblock() makes stream resources non-blocking
+    return stream_get_contents($fp);
+});
+
+foreach ( await($futureResult) as $number) {
+    echo "$number\n";
+}
+```
+
 *Moebius Band: A loop with only one surface*
 
 ![Möbuus Loop](docs/wikipedia-mobius-strip.png)
