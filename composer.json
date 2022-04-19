@@ -2,7 +2,7 @@
     "name": "moebius/moebius",
     "description": "Turbo-charge your existing codebase with coroutines based on pure PHP 8.1 fibers",
     "type": "library",
-    "license": "GPL-2.0-or-later",
+    "license": "MIT",
     "autoload": {
         "files": ["functions.php"]
     },
