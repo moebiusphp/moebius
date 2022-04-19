@@ -1,5 +1,5 @@
 <?php
-use function M\{await, go};
+use function M\{await, go, suspend};
 
 return [
     "Testing coroutines job ordering",
@@ -18,15 +18,18 @@ return [
             go(function() use (&$checkNumber) {
                 echo "First coroutine\n";
                 $checkNumber *= 7;
-            }),
+            })
+        );
+        await(
             go(function() use (&$checkNumber) {
                 echo "Second coroutine\n";
                 $checkNumber *= 9;
             })
         );
 
-        /* This coroutine will run when the test script exist */
+        /* This coroutine will run when the test script exits */
         $result = go(function() use (&$checkNumber) {
+            suspend();
             echo "This happens after the script terminates\n";
             $checkNumber *= 11;
         });
@@ -35,5 +38,5 @@ return [
 
         return $checkNumber;
     },               // the test function
-    [ 0, 27027 ],                                               // an array with input and output data
+    [ 0, 2457 ],                                               // an array with input and output data
  ];

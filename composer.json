@@ -16,9 +16,12 @@
             "email": "frode@ennerd.com"
         }
     ],
-    "minimum-stability": "stable",
+    "minimum-stability": "RC",
+    "prefer-stable": true,
     "require": {
-        "php": ">=8.1"
+        "php": ">=8.1",
+        "moebius/coroutine": "^1.0@RC",
+        "moebius/async-file": "^1.0@RC"
     },
     "require-dev": {
         "charm/testing": "^0.0"
