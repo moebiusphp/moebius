@@ -21,5 +21,10 @@
     },
     "require-dev": {
         "charm/testing": "^0.0"
+    },
+    "scripts": {
+        "test": [
+            "vendor/bin/charm-testing"
+        ]
     }
 }
