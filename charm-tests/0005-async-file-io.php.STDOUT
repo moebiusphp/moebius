@@ -1,0 +1,16 @@
+OK        file_get_contents() for existing file
+OK        file_get_contents() for non-existent file
+OK        opendir() for existing dir
+OK        closedir()
+OK        opendir() for non-existent dir
+OK        mkdir()
+OK        rename() (1)
+OK        rename() (2)
+OK        rmdir()
+OK        fopen('c+')
+OK        fwrite()
+OK        rewind()
+OK        fgets()
+OK        fseek()
+OK        fclose()
+OK        unlink()

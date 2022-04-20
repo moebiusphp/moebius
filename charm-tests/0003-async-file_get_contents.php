@@ -12,3 +12,4 @@ $test = go(function() {
 });
 
 echo "2: This should happen before file_get_contents() completes\n";
+

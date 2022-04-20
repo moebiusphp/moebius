@@ -6,7 +6,7 @@ PHP code inside coroutines.
 
 *Moebius Band: A loop with only one surface*
 
-![Möbuus Loop](docs/wikipedia-mobius-strip.png)
+![Möbuus Loop](docs/assets/wikipedia-mobius-strip.png)
 
 ---
 
