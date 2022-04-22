@@ -40,7 +40,7 @@ With Moebius, you don't have to change your coding style.
 
 ### Old-school javascript
 
-```
+```javascript
     // Do something 10 times, once every second
     let counter = 0;
     let i = setInterval(() => {
@@ -57,7 +57,7 @@ With Moebius, you don't have to change your coding style.
 Ecmascript has introduced the async/await keywords, but
 you can't use them wherever you want. Not good.
 
-```
+```javascript
     // need to make a sleep() function
     function sleep(time) {
         return new Promise((resolve) => {
@@ -81,7 +81,7 @@ you can't use them wherever you want. Not good.
 Just call your function with `go()` (globally asynchronously), or
 with `await(go())` (locally asynchronously).
 
-```
+```php
     use M\{go, sleep};
 
     // Do something 10 times, once every second
