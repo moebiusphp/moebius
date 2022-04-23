@@ -6,7 +6,7 @@ PHP code inside coroutines.
 
 *Moebius Band: A loop with only one surface*
 
-![Möbuus Loop](docs/assets/wikipedia-mobius-strip.png)
+![Möbius Loop](docs/assets/wikipedia-mobius-strip.png)
 
 ---
 
@@ -19,6 +19,102 @@ asynchronously, like in GoLang.
 
 > The easiest way to bring your codebase up to speed with high performance
 > event based concurrency. It's like Swoole, but without the extension.
+
+
+## Plain old PHP
+
+```php
+<?php
+    // Track when all files have been listed
+    foreach (glob(__DIR__.'/*') as $file) {
+        if (!is_file($file)) continue;
+
+        echo basename($file)." ".md5_file($file)."\n";
+    }
+
+```
+
+
+## Moebius example
+
+Even though it looks very much like synchronous code, this is actually using
+asynchronous IO.
+
+```php
+<?php
+    require("vendor/autoload.php");
+
+    use Moebius\Coroutine as Co;
+
+    foreach (glob(__DIR__.'/*') as $file) {
+        if (!is_file($file)) continue;
+
+        Co::go(function($file) {
+            echo basename($file)." ".md5_file($file)."\n";
+        }, $file);
+    }
+```
+
+
+## React PHP example
+
+This example try to print md5 checksums for all files in the current directory
+concurrently using `react/filesystem`. This example will load each file into
+memory, probably many of them at the same time.
+
+```php
+<?php
+    require("vendor/autoload.php");
+
+    use React\Filesystem\Factory;
+    use React\Filesystem\Node\FileInterface;
+
+    use function React\Promise\all;
+
+    $filesystem = Factory::create();
+
+    $filesystem->directory(__DIR__)->ls()
+    ->then(function($files) {
+        foreach ($files as $file) {
+            if ($file instanceof FileInterface) {
+                $file->getContents()
+                ->then(function($contents) use ($file) {
+                    echo $file->name()." ".md5($contents)."\n";
+                });
+            }
+        }
+    });
+
+    $loop->run();
+```
+
+
+## Amp
+
+Amp has a pretty nice syntax. The challenge is to keep track of all the functions
+that require using a `yield` keyword. This example will load each file into
+memory, probably many of them at the same time.
+
+```php
+<?php
+    require("vendor/autoload.php");
+
+    use function Amp\File\{
+        listFiles,
+        isFile,
+        read
+    };
+
+    Amp\call(function () {
+        foreach (yield listFiles(__DIR__) as $file) {
+            Amp\call(function() use ($file) {
+                if (!yield isFile($file)) {
+                    echo basename($file)." ".md5(yield read($file))."\n";
+                }
+            });
+        }
+    });
+```
 
 
 Asynchronous IO
@@ -40,7 +136,7 @@ With Moebius, you don't have to change your coding style.
 
 ### Old-school javascript
 
-```
+```php
     // Do something 10 times, once every second
     let counter = 0;
     let i = setInterval(() => {
@@ -57,7 +153,7 @@ With Moebius, you don't have to change your coding style.
 Ecmascript has introduced the async/await keywords, but
 you can't use them wherever you want. Not good.
 
-```
+```php
     // need to make a sleep() function
     function sleep(time) {
         return new Promise((resolve) => {
@@ -81,7 +177,7 @@ you can't use them wherever you want. Not good.
 Just call your function with `go()` (globally asynchronously), or
 with `await(go())` (locally asynchronously).
 
-```
+```php
     use M\{go, sleep};
 
     // Do something 10 times, once every second

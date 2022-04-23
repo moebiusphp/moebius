@@ -9,20 +9,20 @@ return [
 
         /* This coroutine will run when the test script exist */
         $result = go(function() use (&$checkNumber) {
-            echo "This happens early\n";
+//            echo "This happens early\n";
             $checkNumber *= 3;
         });
 
         await(
             /* These coroutines should happen in order */
             go(function() use (&$checkNumber) {
-                echo "First coroutine\n";
+//                echo "First coroutine\n";
                 $checkNumber *= 7;
             })
         );
         await(
             go(function() use (&$checkNumber) {
-                echo "Second coroutine\n";
+//                echo "Second coroutine\n";
                 $checkNumber *= 9;
             })
         );
@@ -30,7 +30,7 @@ return [
         /* This coroutine will run when the test script exits */
         $result = go(function() use (&$checkNumber) {
             suspend();
-            echo "This happens after the script terminates\n";
+//            echo "This happens after the script terminates\n";
             $checkNumber *= 11;
         });
 
