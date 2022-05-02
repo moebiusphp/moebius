@@ -17,7 +17,7 @@ return [
             $timeTaken = (hrtime(true) - $t) / 1000000000;
             $run = false;
             Co::suspend();
-            return $timeTaken + 0.001 > $time && $timeTaken - 0.001 < $time;
+            return $timeTaken + 0.01 > $time && $timeTaken - 0.01 < $time;
         });
     },
     [ 0, true ],
