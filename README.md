@@ -1,7 +1,7 @@
 Moebius
 =======
 
-Pure coroutines for PHP 8.1. To promises and callbacks needed. Just pure parallel
+Pure coroutines for PHP 8.1. No promises and callbacks needed. Just pure parallel
 PHP code inside coroutines.
 
 *Moebius Band: A loop with only one surface*
