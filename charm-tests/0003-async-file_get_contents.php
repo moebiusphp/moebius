@@ -1,9 +1,11 @@
 <?php
 require(__DIR__.'/../vendor/autoload.php');
 
-use function M\{await, go, sleep};
+use Moebius\Coroutine as Co;
 
-$test = go(function() {
+Co::sleep(0.1);
+
+$test = Co::go(function() {
 
     echo "1: This should happen first\n";
     $thisFile = file_get_contents(__FILE__);

@@ -16,12 +16,11 @@
     "prefer-stable": true,
     "require": {
         "php": ">=8.1",
-        "moebius/coroutine": "^1.0@RC",
-        "moebius/async-file": "^1.0@RC",
-        "moebius/react": "^1.0"
+        "moebius/coroutine": ">1 <2",
+        "moebius/async-file": ">0"
     },
     "require-dev": {
-        "charm/testing": "^0.0"
+        "charm/testing": ">1.0"
     },
     "scripts": {
         "test": [

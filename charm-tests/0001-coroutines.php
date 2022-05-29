@@ -1,42 +1,47 @@
 <?php
-use function M\{await, go, suspend};
+require(__DIR__.'/../vendor/autoload.php');
 
-return [
-    "Testing coroutines job ordering",
+use Moebius\Coroutine as Co;
 
-    function($data) {
-        $checkNumber = 1;
+
+function test($data) {
+    $checkNumber = 1;
 
         /* This coroutine will run when the test script exist */
-        $result = go(function() use (&$checkNumber) {
+    $result = Co::go(function() use (&$checkNumber) {
 //            echo "This happens early\n";
-            $checkNumber *= 3;
-        });
+        $checkNumber *= 3;
+    });
 
-        await(
+    Co::await(
             /* These coroutines should happen in order */
-            go(function() use (&$checkNumber) {
+        Co::go(function() use (&$checkNumber) {
 //                echo "First coroutine\n";
-                $checkNumber *= 7;
-            })
-        );
-        await(
-            go(function() use (&$checkNumber) {
+            $checkNumber *= 7;
+        })
+    );
+    Co::await(
+        Co::go(function() use (&$checkNumber) {
 //                echo "Second coroutine\n";
-                $checkNumber *= 9;
-            })
-        );
+            $checkNumber *= 9;
+        })
+    );
 
         /* This coroutine will run when the test script exits */
-        $result = go(function() use (&$checkNumber) {
-            suspend();
+    $result = Co::go(function() use (&$checkNumber) {
+        Co::suspend();
 //            echo "This happens after the script terminates\n";
-            $checkNumber *= 11;
-        });
+        $checkNumber *= 11;
+    });
 
-        $checkNumber *= 13;
+    $checkNumber *= 13;
 
-        return $checkNumber;
-    },               // the test function
-    [ 0, 2457 ],                                               // an array with input and output data
- ];
+    return $checkNumber;
+}
+
+assert(test(0) === 2457);
+
+
+//,               // the test function
+//    [ 0, 2457 ],                                               // an array with input and output data
+// ];

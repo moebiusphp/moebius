@@ -5,13 +5,13 @@ use Moebius\Coroutine as Co;
 
 Co::run(function() {
     try {
-        $last = Co::getTime();
+        $last = Moebius\Loop::getTime();
         $lastTime = hrtime(true);
 
         // Function increases $errors and prints the reason, if $count does not increase
         // between calls
         $checker = function(string $reason) use (&$last, &$lastTime) {
-            if ($last === Co::getTime()) {
+            if ($last === Moebius\Loop::getTime()) {
                 echo "FAILED    $reason\n          No coroutine switch triggered\n\n";
             } elseif ($lastTime + 5000000 < hrtime(true)) {
                 echo "WARNING   $reason\n          Operation took more than 0.005 seconds and may have been blocking\n\n";
@@ -19,7 +19,7 @@ Co::run(function() {
                 echo "OK        $reason\n";
             }
             Co::suspend();
-            $last = Co::getTime();
+            $last = Moebius\Loop::getTime();
             $lastTime = hrtime(true);
         };
 

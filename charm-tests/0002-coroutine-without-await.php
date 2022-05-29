@@ -1,15 +1,15 @@
 <?php
 require(__DIR__.'/../vendor/autoload.php');
 
-use function M\{await, go, sleep};
+use Moebius\Coroutine as Co;
 
 $theFiber = null;
 
-$test = go(function() {
+$test = Co::go(function() {
     global $theFiber;
     $theFiber = Fiber::getCurrent();
     echo "1: Start\n";
-    sleep(0.1);
+    Co::sleep(0.1);
     echo "3: Follows step 1 in the code\n";
 });
 
