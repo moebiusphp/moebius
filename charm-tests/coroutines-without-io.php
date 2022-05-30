@@ -1,7 +1,7 @@
 <?php
 namespace Funny;
 
-require(__DIR__."/../../vendor/autoload.php");
+require(__DIR__."/../vendor/autoload.php");
 
 use Moebius\Coroutine as Co;
 

@@ -1,21 +1,23 @@
 <?php
     require(__DIR__.'/../../vendor/autoload.php');
 
-    $FIFO_PATH = sys_get_temp_dir().'/example.fifo-file';
+    use Moebius\Coroutine as Co;
 
-    posix_mkfifo($FIFO_PATH, 0600);
+    $fifoPath = sys_get_temp_dir().'/example.fifo-file';
+
+echo "mkfifo\n";
+    posix_mkfifo($fifoPath, 0600);
 
     /**
      * Reading from a blocking fifo file would normally block
      * a PHP application - preventing the next coroutine from
      * starting.
      */
-    $coroutine1 = Moebius::go(function() use ($FIFO_PATH) {
-
+    $coroutine1 = Co::go(function() use ($fifoPath) {
         $counter = 0;
-        $fp = fopen($FIFO_PATH, 'r');
+        $fp = fopen($fifoPath, 'r');
         while (!feof($fp)) {
-            echo "Reading line ".(++$counter).": ".json_encode(fgets($fp))."\n";
+            echo "Reading line ".(++$counter).": ".json_encode(fgets($fp))."\r";
         }
         echo "READ COROUTINE DONE\n";
     });
@@ -24,10 +26,10 @@
      * Only when the first writer can start writing will the
      * coroutine above be allowed to resume.
      */
-    $coroutine2 = Moebius::go(function() use ($FIFO_PATH) {
+    $coroutine2 = Co::go(function() use ($fifoPath) {
         $counter = 0;
 
-        $fp = fopen($FIFO_PATH, 'w');
+        $fp = fopen($fifoPath, 'w');
         $timeLimit = microtime(true) + 2;
         while (microtime(true) < $timeLimit) {
             fwrite($fp, microtime(true)."\n");
@@ -35,11 +37,11 @@
         fclose($fp);
         echo "\nWRITE COROUTINE DONE\n";
     });
-
     // Wait until the coroutine have finished
-    Moebius::await($coroutine1, $coroutine2);
+    Co::await($coroutine1);
+    Co::await($coroutine2);
 
-    unlink($FIFO_PATH);
+    unlink($fifoPath);
 
     echo "End of example\n";
 

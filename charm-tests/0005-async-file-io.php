@@ -26,34 +26,9 @@ Co::run(function() {
         file_get_contents(__FILE__);
         $checker("file_get_contents() for existing file");
 
-        @file_get_contents("nonexistent.file");
-        $checker("file_get_contents() for non-existent file");
-
-        $dir = opendir(__DIR__);
-        $checker("opendir() for existing dir");
-
-        closedir($dir);
-        $checker("closedir()");
-
-        $dir = @opendir(__DIR__.'/nonexistent.dir');
-        $checker("opendir() for non-existent dir");
-
-        $path = sys_get_temp_dir().'/'.hrtime(true).'.'.mt_rand(0, 9999999);
-
-        mkdir($path);
-        $checker("mkdir()");
-
-        rename($path, $path."-temp");
-        $checker("rename() (1)");
-
-        rename($path."-temp", $path);
-        $checker("rename() (2)");
-
-        rmdir($path);
-        $checker("rmdir()");
+        $path = tempnam(sys_get_temp_dir(), 'moebius-test-0005');
 
         $fp = fopen($path, 'c+');
-        $checker("fopen('c+')");
 
         fwrite($fp, "Hello World\n");
         $checker("fwrite()");
@@ -69,9 +44,6 @@ Co::run(function() {
 
         fclose($fp);
         $checker("fclose()");
-
-        unlink($path);
-        $checker("unlink()");
 
     } catch (\Throwable $e) {
         fwrite(STDERR, get_class($e).": ".$e->getMessage()." code=".$e->getCode()." in ".$e->getFile().":".$e->getLine()."\n");

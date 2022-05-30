@@ -7,7 +7,7 @@ $parallel = 0;
 
 $wg = new Moebius\Coroutine\WaitGroup();
 
-foreach (glob("/var/log/*") as $file) {
+foreach (glob(__DIR__."/../vendor/*/*/*/*.php") as $file) {
     if (!is_file($file)) continue;
 
     $wg->add(1);
@@ -17,6 +17,7 @@ foreach (glob("/var/log/*") as $file) {
         if ($parallel > $peak) {
             $peak = $parallel;
         }
+echo ".";
         echo basename($file)." ".md5_file($file)."\n";
         --$parallel;
 
