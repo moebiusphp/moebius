@@ -16,8 +16,8 @@
     "prefer-stable": true,
     "require": {
         "php": ">=8.1",
-        "moebius/coroutine": "dev-master",
-        "moebius/async-file": "dev-master"
+        "moebius/coroutine": ">=1.0.100",
+        "moebius/async-file": ">=1.0.100"
     },
     "require-dev": {
         "charm/testing": ">1.0"
