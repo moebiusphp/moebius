@@ -17,7 +17,8 @@
     "require": {
         "php": ">=8.1",
         "moebius/coroutine": ">=1.0.100",
-        "moebius/async-file": ">=1.0.100"
+        "moebius/async-file": ">=1.0.100",
+        "moebius/common": ">=1.0"
     },
     "require-dev": {
         "charm/testing": ">1.0"
